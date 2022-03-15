@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "allowUnreachableCode": false,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "strict": true,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "types": ["jest", "node"],
+    "declaration": true,
+    "newLine": "lf",
+    "outDir": "./lib",
+    "sourceMap": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "target": "es2021"
+  },
+  "include": ["./src"],
+  "exclude": ["./lib", "./node_modules"]
+}

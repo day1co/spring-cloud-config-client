@@ -1,0 +1,15 @@
+# Node Modules
+node_modules/
+
+# Compiled output
+/lib/
+
+# Test
+coverage/
+
+# OS
+.DS_Store
+
+# IDE
+.idea
+.vscode

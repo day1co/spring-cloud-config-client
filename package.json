@@ -1,0 +1,48 @@
+{
+  "name": "@day1co/cloud-config-client",
+  "version": "0.0.1",
+  "description": "spring cloud config server for node clients",
+  "author": "Day1Company",
+  "license": "MIT",
+  "main": "lib/index.js",
+  "types": "./lib/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/day1co/cloud-config-client.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "scripts": {
+    "build": "tsc",
+    "clean": "rimraf ./coverage ./lib ./node_modules",
+    "clean:build": "rimraf ./lib",
+    "lint": "eslint ./src",
+    "prebuild": "npm-run-all clean:build lint",
+    "prepublishOnly": "npm run build",
+    "serve": "echo no serve",
+    "start": "npm run serve",
+    "test": "jest --coverage --detectOpenHandles --forceExit",
+    "watch": "tsc -w"
+  },
+  "dependencies": {
+    "@day1co/pebbles": "~3.0.1",
+    "@day1co/http-request-sync": "0.0.1"
+  },
+  "devDependencies": {
+    "@types/jest": "^27.4.1",
+    "@types/node": "^17.0.21",
+    "@typescript-eslint/eslint-plugin": "^5.14.0",
+    "@typescript-eslint/parser": "^5.14.0",
+    "eslint": "^8.10.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-import": "^2.25.4",
+    "eslint-plugin-prettier": "^4.0.0",
+    "jest": "^27.5.1",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^2.5.1",
+    "rimraf": "^3.0.2",
+    "ts-jest": "^27.1.3",
+    "typescript": "^4.6.2"
+  }
+}
