@@ -1,4 +1,3 @@
-import path from 'path';
 import { httpRequestSync } from '@day1co/http-request-sync';
 import { ObjectUtil } from '@day1co/pebbles';
 import { createObjectByFlattenedKey, getValueFromNestedObject } from '../utils';
