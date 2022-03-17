@@ -21,7 +21,7 @@ export function createObjectByFlattenedKey({
   return current;
 }
 
-export function getNestedObjectValue({
+export function getValueFromNestedObject({
   flattenedKey,
   nestedObject,
   separator = '.',
