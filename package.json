@@ -1,14 +1,14 @@
 {
-  "name": "@day1co/cloud-config-client",
-  "version": "0.0.2",
-  "description": "spring cloud config server for node clients",
+  "name": "@day1co/spring-cloud-config-client",
+  "version": "0.0.1",
+  "description": "NodeJS-client for Spring Cloud Config Server",
   "author": "Day1Company",
   "license": "MIT",
   "main": "lib/index.js",
   "types": "./lib/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "https://github.com/day1co/cloud-config-client.git"
+    "url": "https://github.com/day1co/spring-cloud-config-client.git"
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
