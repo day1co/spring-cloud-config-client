@@ -10,12 +10,12 @@ import type {
 } from './config-client.interface';
 
 export function getConfigSync({
-  endpoint,
+  endpoint = 'http://localhost:8888',
   application = 'application',
   profile = 'default',
   label = 'main',
 }: ClientRequestOptions): Config {
-  const url = new URL(path.join(application, profile, label), endpoint).toString();
+  const url = `${endpoint}/${application}/${profile}/${label}`;
 
   const configServerResponse = httpRequestSync(url);
   const originalData = JSON.parse(configServerResponse.data);
