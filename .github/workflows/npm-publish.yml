@@ -1,4 +1,4 @@
-name: pebbles-npm-publish
+name: config-client-npm-publish
 concurrency:
   group: npm-publish-${{github.sha}}
   cancel-in-progress: false
