@@ -1,4 +1,4 @@
-name: config-client-npm-publish
+name: spring-cloud-config-client-npm-publish
 concurrency:
   group: npm-publish-${{github.sha}}
   cancel-in-progress: false
