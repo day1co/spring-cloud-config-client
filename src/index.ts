@@ -1,5 +1,5 @@
 export { getConfigSync, Config } from './config-client/config-client';
-export { createObjectByFlattenedKey, getNestedObjectValue } from './utils';
+export { createObjectByFlattenedKey, getValueFromNestedObject } from './utils';
 export type {
   ClientRequestOptions,
   CloudConfigResponse,

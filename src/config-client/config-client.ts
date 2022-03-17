@@ -1,7 +1,7 @@
 import path from 'path';
 import { httpRequestSync } from '@day1co/http-request-sync';
 import { ObjectUtil } from '@day1co/pebbles';
-import { createObjectByFlattenedKey, getNestedObjectValue } from '../utils';
+import { createObjectByFlattenedKey, getValueFromNestedObject } from '../utils';
 import type {
   ClientRequestOptions,
   CloudConfigResponse,
@@ -43,7 +43,7 @@ export class Config {
   public getByKey(configKey: string): unknown {
     const retValue =
       configKey.indexOf('.') >= 0
-        ? getNestedObjectValue({ flattenedKey: configKey, nestedObject: this.configObject })
+        ? getValueFromNestedObject({ flattenedKey: configKey, nestedObject: this.configObject })
         : this.configObject[configKey];
 
     return retValue;
