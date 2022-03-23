@@ -1,7 +1,13 @@
 import * as http from 'node:http';
 import { Worker } from 'node:worker_threads';
 import { getConfigUrl, getConfigSync, Config, getConfig } from './config-client';
-import { mockData, mockDataSource } from './config-client.spec.fixture';
+import {
+  fooDevelopmentRawResponse,
+  fooDevelopmentMergedConfig,
+  barDevelopmentRawResponse,
+  fooBarDevelopmentRawResponse,
+  fooBarDevelopmentMergedConfig,
+} from './config-client.spec.fixture';
 
 describe('configClient', () => {
   let config: Config;
@@ -48,7 +54,7 @@ describe('configClient', () => {
     });
   });
 
-  describe('getConfigSync', () => {
+  describe('getConfigSync with single application', () => {
     let worker: Worker;
     const testPort = 18888;
 
@@ -56,10 +62,14 @@ describe('configClient', () => {
       worker = new Worker(
         `
         const http = require('node:http');
-        const { workerData: { mockData, testPort } } = require('node:worker_threads');
+        const { workerData: { fooMockData, barMockData, fooBarMockData, testPort } } = require('node:worker_threads');
         const server = http.createServer((req, res) => {
-          if (req.url.startsWith('/foo')) {
-            res.end(mockData);
+          if (req.url.startsWith('/foo,bar')) {
+            res.end(fooBarMockData);
+          } else if (req.url.startsWith('/foo')) {
+            res.end(fooMockData);
+          } else if (req.url.startsWith('/bar')) {
+            res.end(barMockData);
           } else if (req.url.startsWith('/invalid')) {
             res.end(JSON.stringify({ error: { errno : 0, code : 'err' } }));
           };
@@ -69,7 +79,15 @@ describe('configClient', () => {
           socket.end();
         })
       `,
-        { eval: true, workerData: { mockData, testPort } }
+        {
+          eval: true,
+          workerData: {
+            fooMockData: JSON.stringify(fooDevelopmentRawResponse),
+            barMockData: JSON.stringify(barDevelopmentRawResponse),
+            fooBarMockData: JSON.stringify(fooBarDevelopmentRawResponse),
+            testPort,
+          },
+        }
       );
 
       worker.on('error', (err) => {
@@ -78,6 +96,7 @@ describe('configClient', () => {
       });
 
       config = getConfigSync({ endpoint: `http://localhost:${testPort}`, application: 'foo' });
+
       done();
     });
 
@@ -86,47 +105,56 @@ describe('configClient', () => {
       done();
     });
 
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
     test('error response', () => {
-      jest.spyOn(process, 'exit').mockImplementation(() => {
-        throw 'Test:process.exit()';
-      });
-      expect(() => getConfigSync({ endpoint: '', application: '' })).toThrow();
-      expect(() => getConfigSync({ endpoint: `http://localhost:${testPort}`, application: 'invalid' })).toThrow();
-      expect(() => getConfigSync({ endpoint: `http://localhost:88888`, application: 'foo' })).toThrow();
-      expect(() => getConfigSync({ endpoint: `localhost:${testPort}`, application: 'foo' })).toThrow();
-    });
+      jest.spyOn(process, 'exit').mockReturnThis();
 
-    test('instance', () => {
-      const sameConfig = getConfigSync({ endpoint: `http://localhost:${testPort}`, application: 'foo' });
-      expect(sameConfig instanceof Config).toBe(true);
+      getConfigSync({ endpoint: '', application: '' });
+      getConfigSync({ endpoint: `http://localhost:${testPort}`, application: 'invalid' });
+      getConfigSync({ endpoint: `http://localhost:88888`, application: 'foo' });
+      getConfigSync({ endpoint: `localhost:${testPort}`, application: 'foo' });
+
+      expect(process.exit).toBeCalledTimes(4);
+    });
+    test('assurance of a sole instance', () => {
+      const barConfig = getConfigSync({ endpoint: `http://localhost:${testPort}`, application: 'bar' });
+
       expect(config instanceof Config).toBe(true);
-      expect(config === sameConfig).toBeTruthy();
-    });
+      expect(barConfig instanceof Config).toBe(true);
+      expect(config).toEqual(barConfig);
 
+      config = getConfigSync({ endpoint: `http://localhost:${testPort}`, application: 'foo' });
+    });
     test('originalData', () => {
-      expect(config.original.name).toEqual(JSON.parse(mockData).name);
-      expect(config.original.profiles).toEqual(JSON.parse(mockData).profiles);
-      expect(config.original.propertySources).toEqual(JSON.parse(mockData).propertySources);
+      expect(config.original).toEqual(fooDevelopmentRawResponse);
     });
-
     test('config object', () => {
-      expect(config.all).toEqual(mockDataSource);
+      expect(config.all).toEqual(fooDevelopmentMergedConfig);
     });
-
     test('getByKey', () => {
-      expect(config.getByKey('database')).toEqual(mockDataSource.database);
-      expect(config.getByKey('database.pool')).toEqual(mockDataSource.database.pool);
-      expect(config.getByKey('database.pool.min')).toEqual(mockDataSource.database.pool.min);
+      expect(config.getByKey('database')).toEqual(fooDevelopmentMergedConfig.database);
     });
-
     test('getByKey with custom environment variable', () => {
       process.env.DATABASE_DATABASE = 'foo_custom';
 
       const config = getConfigSync({ endpoint: `http://localhost:${testPort}`, application: 'foo' });
-      expect(config.getByKey('database')).not.toEqual(mockDataSource.database);
+      expect(config.getByKey('database')).not.toEqual(fooDevelopmentMergedConfig.database);
       expect(config.getByKey('database.database')).toBe(process.env.DATABASE_DATABASE);
 
       delete process.env.DATABASE_DATABASE;
+    });
+    test('multiple applications', () => {
+      config = getConfigSync({ endpoint: `http://localhost:${testPort}`, application: 'foo,bar' });
+
+      expect(config.original).toEqual(fooBarDevelopmentRawResponse);
+      expect(config.all).toEqual(fooBarDevelopmentMergedConfig);
+
+      expect(config.getByKey('foo')).toEqual(fooBarDevelopmentMergedConfig.foo);
+      expect(config.getByKey('bar')).toEqual(fooBarDevelopmentMergedConfig.bar);
+      expect(config.getByKey('application')).toEqual(fooBarDevelopmentMergedConfig.application);
     });
   });
 
@@ -138,14 +166,19 @@ describe('configClient', () => {
       server = http
         .createServer((req, res) => {
           if (req.url) {
-            if (req.url.startsWith('/foo')) {
-              res.end(mockData);
+            if (req.url.startsWith('/foo,bar')) {
+              res.end(JSON.stringify(fooBarDevelopmentRawResponse));
+            } else if (req.url.startsWith('/foo')) {
+              res.end(JSON.stringify(fooDevelopmentRawResponse));
+            } else if (req.url.startsWith('/bar')) {
+              res.end(JSON.stringify(barDevelopmentRawResponse));
             } else if (req.url.startsWith('/invalid')) {
               res.end(JSON.stringify({ error: { errno: 0, code: 'err' } }));
             }
           }
         })
         .listen(testPort);
+
       server.on('clientError', (err, socket) => {
         // eslint-disable-next-line no-console
         console.log('client error occurred, ', String(err));
@@ -159,33 +192,37 @@ describe('configClient', () => {
       server.close(done);
     });
 
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
     test('error response', async () => {
-      expect(async () => await getConfig({ endpoint: '', application: '' })).rejects.toThrow();
-      expect(
-        async () => await getConfig({ endpoint: `http://localhost:${testPort}`, application: 'invalid' })
-      ).rejects.toThrow();
-      expect(async () => await getConfig({ endpoint: `http://localhost:88888`, application: 'foo' })).rejects.toThrow();
-      expect(async () => await getConfig({ endpoint: `localhost:${testPort}`, application: 'foo' })).rejects.toThrow();
-    });
+      jest.spyOn(process, 'exit').mockReturnThis();
 
-    test('instance', () => {
+      await getConfig({ endpoint: '', application: '' });
+      await getConfig({ endpoint: `http://localhost:${testPort}`, application: 'invalid' });
+      await getConfig({ endpoint: `http://localhost:88888`, application: 'foo' });
+      await getConfig({ endpoint: `localhost:${testPort}`, application: 'foo' });
+
+      expect(process.exit).toBeCalledTimes(4);
+    });
+    test('assurance of a sole instance', async () => {
+      const barConfig = await getConfig({ endpoint: `http://localhost:${testPort}`, application: 'bar' });
+
       expect(config instanceof Config).toBe(true);
-    });
+      expect(barConfig instanceof Config).toBe(true);
+      expect(config).toEqual(barConfig);
 
+      config = await getConfig({ endpoint: `http://localhost:${testPort}`, application: 'foo' });
+    });
     test('originalData', () => {
-      expect(config.original.name).toEqual(JSON.parse(mockData).name);
-      expect(config.original.profiles).toEqual(JSON.parse(mockData).profiles);
-      expect(config.original.propertySources).toEqual(JSON.parse(mockData).propertySources);
+      expect(config.original).toEqual(fooDevelopmentRawResponse);
     });
-
     test('config object', () => {
-      expect(config.all).toEqual(mockDataSource);
+      expect(config.all).toEqual(fooDevelopmentMergedConfig);
     });
-
     test('getByKey', () => {
-      expect(config.getByKey('database')).toEqual(mockDataSource.database);
-      expect(config.getByKey('database.pool')).toEqual(mockDataSource.database.pool);
-      expect(config.getByKey('database.pool.min')).toEqual(mockDataSource.database.pool.min);
+      expect(config.getByKey('database')).toEqual(fooDevelopmentMergedConfig.database);
     });
   });
 });
