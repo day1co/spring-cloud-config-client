@@ -13,7 +13,7 @@ export function getConfigSync({
   application = 'application',
   profile = 'default',
   label = 'main',
-}: ClientRequestOptions): Config {
+}: Partial<ClientRequestOptions>): Config {
   const url = `${endpoint}/${application}/${profile}/${label}`;
 
   const configServerResponse = httpRequestSync(url);
