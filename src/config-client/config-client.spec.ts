@@ -13,7 +13,11 @@ describe('configClient', () => {
       const http = require('http');
       const { workerData: { mockData, testPort } } = require('worker_threads');
       const server = http.createServer((req, res) => {
-        res.end(mockData);
+        if (req.url.startsWith('/foo')) {
+          res.end(mockData);
+        } else if (req.url.startsWith('/invalid')) {
+          res.end(JSON.stringify({ error: { errno : 0, code : 'err' } }));
+        };
       }).listen(testPort, () => {
         console.log('test server on ', testPort)
       });
@@ -29,9 +33,7 @@ describe('configClient', () => {
       console.error(err);
     });
 
-    const testRequest = { endpoint: `http://localhost:${testPort}` };
-    config = getConfigSync(testRequest);
-
+    config = getConfigSync({ endpoint: `http://localhost:${testPort}`, application: 'foo' });
     done();
   });
 
@@ -58,5 +60,9 @@ describe('configClient', () => {
     expect(config.getByKey('database')).toEqual(mockDataSource.database);
     expect(config.getByKey('database.pool')).toEqual(mockDataSource.database.pool);
     expect(config.getByKey('database.pool.min')).toEqual(mockDataSource.database.pool.min);
+  });
+
+  test('error response', () => {
+    expect(() => getConfigSync({ endpoint: `http://localhost:${testPort}`, application: 'invalid' })).toThrow();
   });
 });
