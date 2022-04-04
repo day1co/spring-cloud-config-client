@@ -17,8 +17,11 @@ export function getConfigSync({
   const url = `${endpoint}/${application}/${profile}/${label}`;
 
   const configServerResponse = httpRequestSync(url);
-  const originalData = JSON.parse(configServerResponse.data);
+  if (configServerResponse.error) {
+    throw new Error(JSON.stringify(configServerResponse.error));
+  }
 
+  const originalData = JSON.parse(configServerResponse.data);
   return new Config(originalData);
 }
 
