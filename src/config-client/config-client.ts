@@ -9,11 +9,11 @@ import type {
 } from './config-client.interface';
 
 export function getConfigSync({
-  endpoint = 'http://localhost:8888',
+  endpoint,
   application = 'application',
   profile = 'default',
   label = 'main',
-}: Partial<ClientRequestOptions>): Config {
+}: ClientRequestOptions): Config {
   const url = `${endpoint}/${application}/${profile}/${label}`;
 
   const configServerResponse = httpRequestSync(url);

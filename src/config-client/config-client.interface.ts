@@ -1,8 +1,8 @@
 export interface ClientRequestOptions {
   endpoint: string;
   application: string;
-  profile: string;
-  label: string;
+  profile?: string;
+  label?: string;
 }
 
 export interface CloudConfigResponse {
