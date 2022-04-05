@@ -1,4 +1,4 @@
-import { httpRequestSync } from '@day1co/http-request-sync';
+import { httpRequestSync, httpRequestAsync, HttpResponse } from '@day1co/http-request-sync';
 import { ObjectUtil } from '@day1co/pebbles';
 import type { ObjectType } from '@day1co/pebbles';
 import { createObjectByFlattenedKey, getValueFromNestedObject } from '../utils';
@@ -9,6 +9,14 @@ import type {
   PropertySource,
 } from './config-client.interface';
 
+function createConfigByHttpResponse(configServerResponse: HttpResponse): Config {
+  if (configServerResponse.error) {
+    throw new Error(JSON.stringify(configServerResponse.error));
+  }
+  const originalData = JSON.parse(configServerResponse.data);
+  return Config.getInstance(originalData);
+}
+
 export function getConfigSync({
   endpoint,
   application = 'application',
@@ -16,14 +24,19 @@ export function getConfigSync({
   label = 'main',
 }: ClientRequestOptions): Config {
   const url = `${endpoint}/${application}/${profile}/${label}`;
-
   const configServerResponse = httpRequestSync(url);
-  if (configServerResponse.error) {
-    throw new Error(JSON.stringify(configServerResponse.error));
-  }
+  return createConfigByHttpResponse(configServerResponse);
+}
 
-  const originalData = JSON.parse(configServerResponse.data);
-  return Config.getInstance(originalData);
+export async function getConfig({
+  endpoint,
+  application = 'application',
+  profile = 'default',
+  label = 'main',
+}: ClientRequestOptions): Promise<Config> {
+  const url = `${endpoint}/${application}/${profile}/${label}`;
+  const configServerResponse = await httpRequestAsync(url);
+  return createConfigByHttpResponse(configServerResponse);
 }
 
 export class Config {

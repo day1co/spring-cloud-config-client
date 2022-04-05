@@ -1,5 +1,5 @@
 import { Worker } from 'worker_threads';
-import { getConfigSync, Config } from './config-client';
+import { getConfigSync, Config, getConfig } from './config-client';
 import { mockData, mockDataSource } from './config-client.spec.fixture';
 
 describe('configClient', () => {
