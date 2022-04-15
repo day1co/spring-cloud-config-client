@@ -62,6 +62,14 @@ describe('configClient', () => {
     expect(config.getByKey('database.pool.min')).toEqual(mockDataSource.database.pool.min);
   });
 
+  test('getByKey with custom environment variable', () => {
+    process.env.DATABASE_DATABASE = 'foo_custom';
+
+    const config = getConfigSync({ endpoint: `http://localhost:${testPort}`, application: 'foo' });
+    expect(config.getByKey('database')).not.toEqual(mockDataSource.database);
+    expect(config.getByKey('database.database')).toBe(process.env.DATABASE_DATABASE);
+  });
+
   test('error response', () => {
     expect(() => getConfigSync({ endpoint: `http://localhost:${testPort}`, application: 'invalid' })).toThrow();
   });
