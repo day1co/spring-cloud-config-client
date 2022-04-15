@@ -42,6 +42,13 @@ describe('configClient', () => {
     done();
   });
 
+  test('error response', () => {
+    expect(() => getConfigSync({ endpoint: '', application: '' })).toThrow();
+    expect(() => getConfigSync({ endpoint: `http://localhost:${testPort}`, application: 'invalid' })).toThrow();
+    expect(() => getConfigSync({ endpoint: `http://localhost:88888`, application: 'foo' })).toThrow();
+    expect(() => getConfigSync({ endpoint: `localhost:${testPort}`, application: 'foo' })).toThrow();
+  });
+
   test('instance', () => {
     expect(config instanceof Config).toBe(true);
   });
@@ -68,9 +75,5 @@ describe('configClient', () => {
     const config = getConfigSync({ endpoint: `http://localhost:${testPort}`, application: 'foo' });
     expect(config.getByKey('database')).not.toEqual(mockDataSource.database);
     expect(config.getByKey('database.database')).toBe(process.env.DATABASE_DATABASE);
-  });
-
-  test('error response', () => {
-    expect(() => getConfigSync({ endpoint: `http://localhost:${testPort}`, application: 'invalid' })).toThrow();
   });
 });
