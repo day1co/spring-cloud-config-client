@@ -62,7 +62,10 @@ export class Config {
     const flattenedConfigKeys = Object.keys(flattenedConfig);
 
     const configObjectList: ConfigObject[] = flattenedConfigKeys.reduce((configList: ConfigObject[], currentKey) => {
-      const value = flattenedConfig[currentKey];
+      const environmentVariableKey = currentKey.replaceAll('.', '_').toUpperCase();
+      const customValue = process.env[environmentVariableKey];
+
+      const value = customValue ?? flattenedConfig[currentKey];
       const isFlattened = currentKey.indexOf('.') >= 0;
 
       const configObject = isFlattened
