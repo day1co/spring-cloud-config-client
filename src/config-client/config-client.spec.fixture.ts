@@ -1,5 +1,3 @@
-import { ObjectUtil } from '@day1co/pebbles';
-
 const fixture = {
   name: 'foo',
   profiles: ['development'],
@@ -7,29 +5,33 @@ const fixture = {
     {
       name: 'foo-development.yml',
       source: {
-        database: {
-          host: 'foo_dev_host',
-          port: 3306,
-          database: 'foo_dev',
-        },
+        'database.host': 'foo_dev_host',
+        'database.port': 3306,
+        'database.database': 'foo_dev',
       },
     },
     {
       name: 'foo.yml',
       source: {
-        database: {
-          host: 'localhost',
-          port: 3306,
-          database: 'foo_local',
-          pool: {
-            min: 0,
-            max: 10,
-          },
-        },
+        'database.host': 'localhost',
+        'database.port': 3306,
+        'database.database': 'foo_local',
+        'database.pool.min': 0,
+        'database.pool.max': 10,
       },
     },
   ],
 };
 
 export const mockData = JSON.stringify(fixture);
-export const mockDataSource = ObjectUtil.merge({}, ...fixture.propertySources.reverse()).source;
+export const mockDataSource = {
+  database: {
+    host: 'foo_dev_host',
+    port: 3306,
+    database: 'foo_dev',
+    pool: {
+      min: 0,
+      max: 10,
+    },
+  },
+};
