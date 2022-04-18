@@ -62,10 +62,7 @@ export class Config {
     const flattenedConfigKeys = Object.keys(flattenedConfig);
 
     const configObjectList: ConfigObject[] = flattenedConfigKeys.reduce((configList: ConfigObject[], currentKey) => {
-      const environmentVariableKey = currentKey.replaceAll('.', '_').toUpperCase();
-      const customValue = process.env[environmentVariableKey];
-
-      const value = customValue ?? flattenedConfig[currentKey];
+      const value = this.getEnvironmentValueIfExists(currentKey) ?? flattenedConfig[currentKey];
       const isFlattened = currentKey.indexOf('.') >= 0;
 
       const configObject = isFlattened
@@ -76,5 +73,10 @@ export class Config {
     }, []);
 
     return ObjectUtil.merge({}, ...configObjectList);
+  }
+
+  private getEnvironmentValueIfExists(key: string): string | undefined {
+    const environmentVariableKey = key.replaceAll('.', '_').toUpperCase();
+    return process.env[environmentVariableKey];
   }
 }
