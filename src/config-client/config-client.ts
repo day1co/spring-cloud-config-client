@@ -9,7 +9,7 @@ import type {
   PropertySource,
 } from './config-client.interface';
 
-function createConfigByHttpResponse(configServerResponse: HttpResponse): Config {
+function createConfigWithHttpResponse(configServerResponse: HttpResponse): Config {
   if (configServerResponse.error) {
     throw new Error(JSON.stringify(configServerResponse.error));
   }
@@ -25,7 +25,7 @@ export function getConfigSync({
 }: ClientRequestOptions): Config {
   const url = `${endpoint}/${application}/${profile}/${label}`;
   const configServerResponse = httpRequestSync(url);
-  return createConfigByHttpResponse(configServerResponse);
+  return createConfigWithHttpResponse(configServerResponse);
 }
 
 export async function getConfig({
@@ -36,7 +36,7 @@ export async function getConfig({
 }: ClientRequestOptions): Promise<Config> {
   const url = `${endpoint}/${application}/${profile}/${label}`;
   const configServerResponse = await httpRequestAsync(url);
-  return createConfigByHttpResponse(configServerResponse);
+  return createConfigWithHttpResponse(configServerResponse);
 }
 
 export class Config {
