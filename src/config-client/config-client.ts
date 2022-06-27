@@ -1,5 +1,6 @@
 import { httpRequestSync } from '@day1co/http-request-sync';
 import { ObjectUtil } from '@day1co/pebbles';
+import type { ObjectType } from '@day1co/pebbles';
 import { createObjectByFlattenedKey, getValueFromNestedObject } from '../utils';
 import type {
   ClientRequestOptions,
@@ -22,16 +23,35 @@ export function getConfigSync({
   }
 
   const originalData = JSON.parse(configServerResponse.data);
-  return new Config(originalData);
+  return Config.getInstance(originalData);
 }
 
 export class Config {
+  private static instance: Config;
   private originalData: CloudConfigResponse;
   private configObject: ConfigObject;
 
-  constructor(originalData: CloudConfigResponse) {
+  private constructor(originalData: CloudConfigResponse) {
     this.originalData = originalData;
-    this.configObject = this.createConfigObject();
+    this.configObject = this.createConfigObject(originalData);
+  }
+
+  public static getInstance(originalData: CloudConfigResponse): Config {
+    if (!this.instance) {
+      this.instance = new Config(originalData);
+      return this.instance;
+    }
+
+    const isConfigChanged = !ObjectUtil.isEqual(
+      this.instance?.createConfigObject(originalData),
+      this.instance?.configObject
+    );
+
+    if (isConfigChanged) {
+      this.instance.originalData = originalData;
+      this.instance.configObject = this.instance.createConfigObject(originalData);
+    }
+    return this.instance;
   }
 
   get all() {
@@ -51,8 +71,8 @@ export class Config {
     return retValue;
   }
 
-  private createConfigObject() {
-    const propertySources = this.originalData.propertySources
+  private createConfigObject(originalData: CloudConfigResponse): ObjectType {
+    const propertySources = originalData.propertySources
       .map((propertySource: PropertySource) => {
         return propertySource.source;
       })

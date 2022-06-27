@@ -28,11 +28,9 @@ describe('configClient', () => {
     `,
       { eval: true, workerData: { mockData, testPort } }
     );
-
     worker.on('error', (err) => {
       console.error(err);
     });
-
     config = getConfigSync({ endpoint: `http://localhost:${testPort}`, application: 'foo' });
     done();
   });
@@ -50,7 +48,10 @@ describe('configClient', () => {
   });
 
   test('instance', () => {
+    const sameConfig = getConfigSync({ endpoint: `http://localhost:${testPort}`, application: 'foo' });
+    expect(sameConfig instanceof Config).toBe(true);
     expect(config instanceof Config).toBe(true);
+    expect(config === sameConfig).toBeTruthy();
   });
 
   test('originalData', () => {
@@ -71,9 +72,8 @@ describe('configClient', () => {
 
   test('getByKey with custom environment variable', () => {
     process.env.DATABASE_DATABASE = 'foo_custom';
-
-    const config = getConfigSync({ endpoint: `http://localhost:${testPort}`, application: 'foo' });
-    expect(config.getByKey('database')).not.toEqual(mockDataSource.database);
-    expect(config.getByKey('database.database')).toBe(process.env.DATABASE_DATABASE);
+    const customConfig = getConfigSync({ endpoint: `http://localhost:${testPort}`, application: 'foo' });
+    expect(customConfig.getByKey('database')).not.toEqual(mockDataSource.database);
+    expect(customConfig.getByKey('database.database')).toBe(process.env.DATABASE_DATABASE);
   });
 });
