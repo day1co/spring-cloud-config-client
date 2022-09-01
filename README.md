@@ -61,3 +61,26 @@ config.getByKey('database.host'); // 'localhost'
 ## Reference
 
 this repository is based on https://github.com/victorherraiz/cloud-config-client
+
+
+## 로컬 개발시
+
+http://localhost:8888 에 config 서버가 띄워져 있어야 합니다.
+
+### 방법1. 모듈 내 embedded-server를 사용한다.
+
+- `startMockServer` 함수를 사용하면 Spring Cloud Config Server를 흉내내는 localhost:8888 서버가 열립니다.
+- response로 받고자 하는 config 값들을 js 확장자나 json 확장자 파일로 준비합니다. (TOBE: yml 지원)
+- 해당 파일은 redstone-config-repo에 있는 yml 파일의 구조와 동일해야 합니다.
+- 해당 파일의 path를 `startMockServer` 호출하는 프로젝트 루트 기준으로 제공해줍니다.
+
+```console
+$ pwd
+/Users/someone/Desktop/my-project
+```
+
+```javascript
+// read file at /Users/someone/Desktop/my-project/config/local.fixture.js
+
+startMockServer(`config/local.fixture.js`);
+```
