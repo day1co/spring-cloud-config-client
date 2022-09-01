@@ -6,3 +6,4 @@ export type {
   ConfigObject,
   PropertySource,
 } from './config-client/config-client.interface';
+export { startMockServer } from './embedded-server';
