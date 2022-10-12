@@ -1,4 +1,4 @@
-export { getConfigSync, Config } from './config-client/config-client';
+export { getConfigSync, getConfig, Config } from './config-client/config-client';
 export { createObjectByFlattenedKey, getValueFromNestedObject } from './utils';
 export type {
   ClientRequestOptions,
