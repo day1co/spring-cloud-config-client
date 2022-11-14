@@ -1,10 +1,52 @@
 import http from 'http';
 import { Worker } from 'worker_threads';
-import { getConfigSync, Config, getConfig } from './config-client';
+import { getConfigUrl, getConfigSync, Config, getConfig } from './config-client';
 import { mockData, mockDataSource } from './config-client.spec.fixture';
 
 describe('configClient', () => {
   let config: Config;
+
+  describe('getConfigUrl', () => {
+    afterEach(() => {
+      delete process.env.SPRING_CLOUD_CONFIG_URI;
+      delete process.env.SPRING_CLOUD_CONFIG_NAME;
+      delete process.env.SPRING_CLOUD_CONFIG_PROFILE;
+      delete process.env.SPRING_CLOUD_CONFIG_LABEL;
+    });
+
+    it('should have default values', () => {
+      delete process.env.SPRING_CLOUD_CONFIG_URI;
+      delete process.env.SPRING_CLOUD_CONFIG_NAME;
+      delete process.env.SPRING_CLOUD_CONFIG_PROFILE;
+      delete process.env.SPRING_CLOUD_CONFIG_LABEL;
+      expect(getConfigUrl()).toBe('http://localhost:8888/application/default/main');
+    });
+    it('could be overridden by system environments', () => {
+      process.env.SPRING_CLOUD_CONFIG_URI = 'ENDPOINT';
+      process.env.SPRING_CLOUD_CONFIG_NAME = 'APPLICATION';
+      process.env.SPRING_CLOUD_CONFIG_PROFILE = 'PROFILE';
+      process.env.SPRING_CLOUD_CONFIG_LABEL = 'LABEL';
+      expect(getConfigUrl()).toBe('ENDPOINT/APPLICATION/PROFILE/LABEL');
+    });
+    it('could be overridden by arguments', () => {
+      process.env.SPRING_CLOUD_CONFIG_URI = 'ENDPOINT';
+      process.env.SPRING_CLOUD_CONFIG_NAME = 'APPLICATION';
+      process.env.SPRING_CLOUD_CONFIG_PROFILE = 'PROFILE';
+      process.env.SPRING_CLOUD_CONFIG_LABEL = 'LABEL';
+      expect(
+        getConfigUrl({
+          endpoint: 'endpoint',
+          application: 'application',
+          profile: 'profile',
+          label: 'label',
+        })
+      ).toBe('endpoint/application/profile/label');
+      expect(getConfigUrl({ endpoint: 'endpoint' })).toBe('endpoint/APPLICATION/PROFILE/LABEL');
+      expect(getConfigUrl({ application: 'application' })).toBe('ENDPOINT/application/PROFILE/LABEL');
+      expect(getConfigUrl({ profile: 'profile' })).toBe('ENDPOINT/APPLICATION/profile/LABEL');
+      expect(getConfigUrl({ label: 'label' })).toBe('ENDPOINT/APPLICATION/PROFILE/label');
+    });
+  });
 
   describe('getConfigSync', () => {
     let worker: Worker;
