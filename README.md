@@ -11,18 +11,24 @@ npm i @day1co/spring-cloud-config-client
 ```
 
 ```javascript
-const client = require('@day1co/spring-cloud-config-client');
+const { getConfig } = require('@day1co/spring-cloud-config-client');
 ```
 
 ## How to get config from Spring Cloud server
 
-**Synchronous**
+### Asynchronous(preferred)
+
+```javascript
+getConfig({ endpoint, application, profile, label });
+```
+
+### Synchronous
 
 ```javascript
 getConfigSync({ endpoint, application, profile, label });
 ```
 
-**Example**
+### Example
 
 ```javascript
 const config = client.getConfigSync({
@@ -32,15 +38,22 @@ const config = client.getConfigSync({
 });
 ```
 
-**Arguments**
+### Arguments
 
-- endpoint _(string)_ : The endpoint of spring cloud config server
-- application _(string)_ : The name of client application that you would like to get.
-- profile _(string, default='default')_ : The name of client application's environment like `NODE_ENV` or `APP_ENV`.
-- label _(string, default='main')_ : The name of config-repo's git branch.
-  <br/><br/>
+- `endpoint` _(string; default='http://localhost:8888')_ : The endpoint of spring cloud config server. 
+- `application` _(string; default='application')_ : The name of client application that you would like to get.
+- `profile` _(string; default='default')_ : The name of client application's environment like `NODE_ENV` or `APP_ENV`.
+- `label` _(string; default='main')_ : The name of config-repo's git branch.
 
-**Getting config as nested object**
+### System Environments
+
+You can override them by following system environment variables:
+- `SPRING_CLOUD_CONFIG_URI` for default endpoint.
+- `SPRING_CLOUD_CONFIG_NAME` for default application.
+- `SPRING_CLOUD_CONFIG_PROFILE` for default profile.
+- `SPRING_CLOUD_CONFIG_LABEL`. for default label.
+
+### Getting config as nested object
 
 ```javascript
 console.log(config.all);
@@ -52,16 +65,24 @@ console.log(config.all);
 // }
 ```
 
-**Getting config by its key**
+### Getting config by its key
 
 ```javascript
 config.getByKey('database.host'); // 'localhost'
 ```
 
+You can override configuration value on client system environment variables.
+
+```javascript
+process.env.DATABASE_HOST = 'overridden';
+config.getByKey('database.host'); // 'overridden'
+```
+
 ## Reference
 
-this repository is based on https://github.com/victorherraiz/cloud-config-client
+This repository is based on https://github.com/victorherraiz/cloud-config-client
 
+See also https://docs.spring.io/spring-cloud-config/docs/current/reference/html/#_spring_cloud_config_client
 
 ## 로컬 개발시
 

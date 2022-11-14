@@ -1,5 +1,5 @@
 export interface ClientRequestOptions {
-  endpoint: string;
+  endpoint?: string;
   application?: string;
   profile?: string;
   label?: string;

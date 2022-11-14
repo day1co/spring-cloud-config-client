@@ -2,6 +2,12 @@ import { httpRequestSync, httpRequestAsync, HttpResponse } from '@day1co/http-re
 import { ObjectUtil } from '@day1co/pebbles';
 import type { ObjectType } from '@day1co/pebbles';
 import { createObjectByFlattenedKey, getValueFromNestedObject } from '../utils';
+import {
+  DEF_CONFIG_ENDPOINT,
+  DEF_CONFIG_APPLICATION,
+  DEF_CONFIG_PROFILE,
+  DEF_CONFIG_LABEL,
+} from './config-client.const';
 import type {
   ClientRequestOptions,
   CloudConfigResponse,
@@ -17,24 +23,26 @@ function createConfigWithHttpResponse(configServerResponse: HttpResponse): Confi
   return Config.getInstance(originalData);
 }
 
-export function getConfigSync({
-  endpoint,
-  application = 'application',
-  profile = 'default',
-  label = 'main',
-}: ClientRequestOptions): Config {
-  const url = `${endpoint}/${application}/${profile}/${label}`;
+// 환경 변수로 재정의 가능
+// https://docs.spring.io/spring-cloud-config/docs/current/reference/html/#config-data-import
+// https://docs.spring.io/spring-cloud-config/docs/current/reference/html/#_locating_remote_configuration_resourcesO
+export function getConfigUrl({
+  endpoint = process.env.SPRING_CLOUD_CONFIG_URI ?? DEF_CONFIG_ENDPOINT,
+  application = process.env.SPRING_CLOUD_CONFIG_NAME ?? DEF_CONFIG_APPLICATION,
+  profile = process.env.SPRING_CLOUD_CONFIG_PROFILE ?? DEF_CONFIG_PROFILE,
+  label = process.env.SPRING_CLOUD_CONFIG_LABEL ?? DEF_CONFIG_LABEL,
+}: ClientRequestOptions = {}) {
+  return `${endpoint}/${application}/${profile}/${label}`;
+}
+
+export function getConfigSync(opts?: ClientRequestOptions): Config {
+  const url = getConfigUrl(opts);
   const configServerResponse = httpRequestSync(url);
   return createConfigWithHttpResponse(configServerResponse);
 }
 
-export async function getConfig({
-  endpoint,
-  application = 'application',
-  profile = 'default',
-  label = 'main',
-}: ClientRequestOptions): Promise<Config> {
-  const url = `${endpoint}/${application}/${profile}/${label}`;
+export async function getConfig(opts?: ClientRequestOptions): Promise<Config> {
+  const url = getConfigUrl(opts);
   const configServerResponse = await httpRequestAsync(url);
   return createConfigWithHttpResponse(configServerResponse);
 }
