@@ -75,13 +75,11 @@ export class Config {
     return this.originalData;
   }
 
-  public getByKey(configKey: string): unknown {
-    const retValue =
-      configKey.indexOf('.') >= 0
-        ? getValueFromNestedObject({ flattenedKey: configKey, nestedObject: this.configObject })
-        : this.configObject[configKey];
-
-    return retValue;
+  //todo: 임시방편으로 any지만, 리턴 타입 변경 필요
+  public getByKey(configKey: string): any {
+    return configKey.indexOf('.') >= 0
+      ? getValueFromNestedObject({ flattenedKey: configKey, nestedObject: this.configObject })
+      : this.configObject[configKey];
   }
 
   private createConfigObject(originalData: CloudConfigResponse): ObjectType {
