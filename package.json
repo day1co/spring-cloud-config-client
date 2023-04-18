@@ -1,6 +1,6 @@
 {
   "name": "@day1co/spring-cloud-config-client",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "description": "NodeJS-client for Spring Cloud Config Server",
   "author": "Day1Company",
   "license": "MIT",
