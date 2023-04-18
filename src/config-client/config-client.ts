@@ -1,5 +1,5 @@
 import { httpRequestSync, httpRequestAsync, HttpResponse } from '@day1co/http-request-sync';
-import { ObjectUtil } from '@day1co/pebbles';
+import { LoggerFactory, ObjectUtil } from '@day1co/pebbles';
 import type { ObjectType } from '@day1co/pebbles';
 import { createObjectByFlattenedKey, getValueFromNestedObject } from '../utils';
 import {
@@ -15,12 +15,18 @@ import type {
   PropertySource,
 } from './config-client.interface';
 
+const logger = LoggerFactory.getLogger('spring-cloud-config-client');
+
 function createConfigWithHttpResponse(configServerResponse: HttpResponse): Config {
-  if (configServerResponse.error) {
-    throw new Error(JSON.stringify(configServerResponse.error));
+  try {
+    if (configServerResponse.error) {
+      throw new Error(JSON.stringify(configServerResponse.error));
+    }
+    return Config.getInstance(JSON.parse(configServerResponse.data));
+  } catch (err) {
+    logger.error('Response from config server is not available : %o', configServerResponse);
+    process.exit(1);
   }
-  const originalData = JSON.parse(configServerResponse.data);
-  return Config.getInstance(originalData);
 }
 
 // 환경 변수로 재정의 가능
