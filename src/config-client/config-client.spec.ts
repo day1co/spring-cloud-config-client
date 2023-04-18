@@ -86,6 +86,9 @@ describe('configClient', () => {
     });
 
     test('error response', () => {
+      jest.spyOn(process, 'exit').mockImplementation(() => {
+        throw 'Test:process.exit()';
+      });
       expect(() => getConfigSync({ endpoint: '', application: '' })).toThrow();
       expect(() => getConfigSync({ endpoint: `http://localhost:${testPort}`, application: 'invalid' })).toThrow();
       expect(() => getConfigSync({ endpoint: `http://localhost:88888`, application: 'foo' })).toThrow();
