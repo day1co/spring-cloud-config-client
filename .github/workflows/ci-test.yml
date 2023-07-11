@@ -16,15 +16,13 @@ jobs:
         node-version: [18.x]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-          cache: npm
-          cache-dependency-path: '**/package-lock.json'
-      - name: Prepare dot npmrc for private registry
-        shell: bash
+          cache: 'npm'
+      - name: Prepare dot npmrc for Private Registry
         run: echo //npm.pkg.github.com/:_authToken=${{ secrets.GH_TOKEN }} >> ~/.npmrc
       - name: Install Dependencies
         if: steps.node-cache.outputs.cache-hit != 'true'
@@ -34,10 +32,8 @@ jobs:
       - name: Lint Test
         run: npm run lint
         env:
-          NODE_ENV: dev
           CI: true
       - name: Spring-Cloud-Config-Client Test
         run: npm run test
         env:
-          NODE_ENV: test
           CI: true

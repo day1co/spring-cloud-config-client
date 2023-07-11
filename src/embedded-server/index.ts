@@ -46,7 +46,7 @@ export function startMockServer(filePath: string): void {
   );
 
   worker.on('error', (err) => {
-    logger.error(`Error occured on Worker config server : ${err.message}, stack = ${err.stack} `);
+    logger.error(`Error occurred on Worker config server : ${err.message}, stack = ${err.stack} `);
   });
 }
 

@@ -57,6 +57,7 @@ describe('embedded-server', () => {
           });
         })
         .on('error', (err) => {
+          // eslint-disable-next-line no-console
           console.error(err);
           done();
         })

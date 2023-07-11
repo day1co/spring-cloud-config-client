@@ -48,7 +48,7 @@ const config = client.getConfigSync({
 
 - `endpoint` _(string; default='http://localhost:8888')_ : The endpoint of spring cloud config server.
 - `application` _(string; default='application')_ : The name of client application that you would like to get.
-- `profile` _(string; default='default')_ : The name of client application's environment like `NODE_ENV` or `APP_ENV`.
+- `profile` _(string; default='default')_ : The name of client application's environment like `D1_ENV` or `APP_ENV`.
 - `label` _(string; default='main')_ : The name of config-repo's git branch.
 
 ### System Environments
