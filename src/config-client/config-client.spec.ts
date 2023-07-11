@@ -1,5 +1,5 @@
-import http from 'http';
-import { Worker } from 'worker_threads';
+import * as http from 'node:http';
+import { Worker } from 'node:worker_threads';
 import { getConfigUrl, getConfigSync, Config, getConfig } from './config-client';
 import { mockData, mockDataSource } from './config-client.spec.fixture';
 
@@ -55,8 +55,8 @@ describe('configClient', () => {
     beforeAll((done) => {
       worker = new Worker(
         `
-        const http = require('http');
-        const { workerData: { mockData, testPort } } = require('worker_threads');
+        const http = require('node:http');
+        const { workerData: { mockData, testPort } } = require('node:worker_threads');
         const server = http.createServer((req, res) => {
           if (req.url.startsWith('/foo')) {
             res.end(mockData);
@@ -65,7 +65,7 @@ describe('configClient', () => {
           };
         }).listen(testPort);
         server.on('clientError', (err, socket) => {
-          console.log('client error occured, ', String(err));
+          console.log('client error occurred, ', String(err));
           socket.end();
         })
       `,
@@ -73,6 +73,7 @@ describe('configClient', () => {
       );
 
       worker.on('error', (err) => {
+        // eslint-disable-next-line no-console
         console.error(err);
       });
 
@@ -146,7 +147,8 @@ describe('configClient', () => {
         })
         .listen(testPort);
       server.on('clientError', (err, socket) => {
-        console.log('client error occured, ', String(err));
+        // eslint-disable-next-line no-console
+        console.log('client error occurred, ', String(err));
         socket.end();
       });
 
