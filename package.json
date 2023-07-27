@@ -1,6 +1,6 @@
 {
   "name": "@day1co/spring-cloud-config-client",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "NodeJS-client for Spring Cloud Config Server",
   "author": "Day1Company",
   "license": "MIT",
@@ -33,6 +33,7 @@
     "@day1co/eslint-config": "^1.0.0",
     "@day1co/prettier-config": "^1.0.0",
     "@day1co/tsconfig": "^1.2.1",
+    "@tsconfig/node-lts": "^18.12.1",
     "@types/jest": "^29.5.0",
     "@types/node": "^20.4.0",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
@@ -46,6 +47,6 @@
     "prettier": "^2.8.8",
     "rimraf": "^5.0.0",
     "ts-jest": "^29.1.0",
-    "typescript": "^5.0.0"
+    "typescript": "^4.9.5"
   }
 }
