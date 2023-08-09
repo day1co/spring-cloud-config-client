@@ -139,17 +139,16 @@ export const barDevelopmentMergedConfig = {
 
 /**
  * @description An expected response when you use multiple applications, with "name" including ",".
- * Note that the order of multiple-application response`s propertySources is different from single-appliatoin response`s.
  */
 export const fooBarDevelopmentRawResponse = {
   name: 'foo,bar',
   profiles: ['development'],
   propertySources: [
     fooDevelopmentConfig,
-    fooConfig,
     barDevelopmentConfig,
-    barConfig,
     applicationDevelopmentConfig,
+    fooConfig,
+    barConfig,
     applicationConfig,
   ],
 };
