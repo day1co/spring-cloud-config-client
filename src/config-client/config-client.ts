@@ -14,8 +14,6 @@ import type {
   PropertySource,
 } from './config-client.interface';
 
-const DEFAULT_APPLICATION_NAME = 'application';
-
 const logger = LoggerFactory.getLogger('spring-cloud-config-client');
 
 // 환경 변수로 재정의 가능
@@ -82,7 +80,6 @@ export class Config {
       this.instance.originalData = originalData;
       this.instance.configObject = newConfigObject;
     }
-
     return this.instance;
   }
 
@@ -101,29 +98,15 @@ export class Config {
       : this.configObject[configKey];
   }
 
-  private createConfigObject(originalData: CloudConfigResponse): ConfigObject {
-    const isMultipleApplications = originalData.name.indexOf(',') >= 0;
-
-    const configObject = isMultipleApplications
-      ? this.separateMultipleApplications(originalData)
-      : this.mergeConfigProfiles(originalData.propertySources);
-
-    const configKeys = Object.keys(configObject);
-
-    if (isMultipleApplications) {
-      return configKeys.reduce((mixedConfig: ConfigObject, applicationName) => {
-        const applicationConfig = configObject[applicationName];
-        const configKeys = Object.keys(applicationConfig);
-        mixedConfig[applicationName] = this.mergeFlattenedConfig(configKeys, applicationConfig);
-
-        return mixedConfig;
-      }, {});
-    }
-
-    return this.mergeFlattenedConfig(configKeys, configObject);
+  private createConfigObject(originalData: CloudConfigResponse) {
+    return originalData.name.indexOf(',') >= 0
+      ? this.createMultipleApplicationConfigObject(originalData)
+      : this.createSingleApplicationConfigObject(originalData);
   }
 
-  private separateMultipleApplications(originalData: CloudConfigResponse): ConfigObject {
+  private createMultipleApplicationConfigObject(originalData: CloudConfigResponse): ConfigObject {
+    const DEFAULT_APPLICATION_NAME = 'application';
+
     const isDefaultApplicationIncluded = originalData.propertySources.some((propertySource) => {
       return propertySource.name.includes(DEFAULT_APPLICATION_NAME);
     });
@@ -131,20 +114,33 @@ export class Config {
     const names = originalData.name.split(',');
     const applicationNames = isDefaultApplicationIncluded ? names.concat(DEFAULT_APPLICATION_NAME) : names;
 
-    const separatedConfig = applicationNames.reduce((config: ConfigObject, applicationName): ConfigObject => {
-      const applicationPropertySourceList = originalData.propertySources.filter((propertySource) => {
-        // extract application name from git address string
-        // ex ) git@github.com:your-workspace/config-repo.git/foo-development.yml >> foo
-        const configApplicationName = propertySource.name.split('/').at(-1)?.split(/(\W)/gi)[0];
-        return configApplicationName === applicationName || configApplicationName === DEFAULT_APPLICATION_NAME;
-      });
+    const configByApplications = applicationNames.reduce(
+      (config: ConfigObject, currentApplicationName): ConfigObject => {
+        const currentApplicationPropertySourceList = originalData.propertySources.filter((propertySource) => {
+          // extract application name from git address string
+          // ex ) git@github.com:your-workspace/config-repo.git/foo-development.yml -> foo
+          const applicationName = propertySource.name.split('/').at(-1)?.split(/(\W)/gi)[0];
+          return applicationName === currentApplicationName || applicationName === DEFAULT_APPLICATION_NAME;
+        });
 
-      const applicationConfig = this.mergeConfigProfiles(applicationPropertySourceList);
+        const currentApplicationConfig = this.mergeConfigProfiles(currentApplicationPropertySourceList);
 
-      config[applicationName] = applicationConfig;
+        config[currentApplicationName] = currentApplicationConfig;
+        return config;
+      },
+      {}
+    );
+
+    return Object.keys(configByApplications).reduce((config: ConfigObject, applicationName) => {
+      const currentApplicationConfig = configByApplications[applicationName];
+      config[applicationName] = this.divideFlattenedKeysOfConfig(currentApplicationConfig);
       return config;
     }, {});
-    return separatedConfig;
+  }
+
+  private createSingleApplicationConfigObject(originalData: CloudConfigResponse): ConfigObject {
+    const configObject = this.mergeConfigProfiles(originalData.propertySources);
+    return this.divideFlattenedKeysOfConfig(configObject);
   }
 
   private mergeConfigProfiles(propertySources: PropertySource[]): ConfigObject {
@@ -156,19 +152,22 @@ export class Config {
     return ObjectUtil.merge({}, ...sources);
   }
 
-  private mergeFlattenedConfig(flattenedKeys: string[], flattenedConfig: ConfigObject): ConfigObject {
-    const configObjectList: ConfigObject[] = flattenedKeys.reduce((configList: ConfigObject[], currentKey) => {
-      const value = this.getEnvironmentValueIfExists(currentKey) ?? flattenedConfig[currentKey];
-      const isFlattened = currentKey.indexOf('.') >= 0;
+  private divideFlattenedKeysOfConfig(configByFlattenedKeys: ConfigObject): ConfigObject {
+    const configKeys = Object.keys(configByFlattenedKeys);
 
-      const configObject = isFlattened
-        ? createObjectByFlattenedKey({ flattenedKey: currentKey, value })
-        : { [currentKey]: value };
+    const configObjectList: ConfigObject[] = configKeys.reduce((configList: ConfigObject[], key) => {
+      const value = this.getEnvironmentValueIfExists(key) ?? configByFlattenedKeys[key];
+
+      const isCurrentKeyFlattened = key.indexOf('.') >= 0;
+
+      const configObject = isCurrentKeyFlattened
+        ? createObjectByFlattenedKey({ flattenedKey: key, value })
+        : { [key]: value };
 
       return configList.concat(configObject);
     }, []);
 
-    return ObjectUtil.merge({}, ...configObjectList) as ConfigObject;
+    return ObjectUtil.merge({}, ...configObjectList);
   }
 
   private getEnvironmentValueIfExists(key: string): string | undefined {
