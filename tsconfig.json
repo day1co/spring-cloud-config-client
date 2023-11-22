@@ -1,6 +1,6 @@
 {
-  "extends": "@day1co/tsconfig/backend.json",
-  "compilerOptions": {"outDir": "./lib"},
+  "extends": "@day1co/tsconfig/backend-mixed.json",
+  "compilerOptions": { "outDir": "./lib" },
   "include": ["./src"],
-  "exclude": ["./lib", "./node_modules", "**/*.spec.ts", "**/*.test.ts", "**/*.spec.js", "**/*.test.js"],
+  "exclude": ["./lib", "./node_modules", "**/*.spec.ts", "**/*.test.ts", "**/*.spec.js", "**/*.test.js"]
 }
