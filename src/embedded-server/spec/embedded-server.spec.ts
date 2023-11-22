@@ -1,15 +1,12 @@
 import http from 'http';
 
 import { EmbeddedServer } from '../embedded-server';
+import { MiscUtil } from '@day1co/pebbles';
 
 const VALID_FIXTURE_FILE_PATH = './src/embedded-server/spec/';
 
 describe('embedded-server', () => {
   let embeddedServer: EmbeddedServer;
-
-  afterAll(async () => {
-    await EmbeddedServer.destroy();
-  });
 
   describe('create', () => {
     afterEach(async () => {
@@ -36,15 +33,15 @@ describe('embedded-server', () => {
     });
   });
   describe('start', () => {
-    beforeAll(() => {
-      embeddedServer = EmbeddedServer.create(VALID_FIXTURE_FILE_PATH + 'fixture.js');
-    });
     afterAll(async () => {
       await EmbeddedServer.destroy();
     });
 
     test('success', async () => {
+      embeddedServer = EmbeddedServer.create(VALID_FIXTURE_FILE_PATH + 'fixture.js');
       embeddedServer.start();
+
+      await MiscUtil.sleep(1000);
 
       const res = await new Promise<{ data: any }>((resolve, reject) => {
         let data = '';
@@ -87,14 +84,14 @@ describe('embedded-server', () => {
     beforeAll(() => {
       embeddedServer = EmbeddedServer.create(VALID_FIXTURE_FILE_PATH + 'fixture.js');
     });
-    afterAll(() => {
-      EmbeddedServer.destroy();
+    afterAll(async () => {
+      await EmbeddedServer.destroy();
     });
 
-    test('success (not running)', async () => {
+    test('success (not running)', () => {
       expect(embeddedServer.isRunning()).toBeFalsy();
     });
-    test('success (running)', async () => {
+    test('success (running)', () => {
       embeddedServer.start();
       expect(embeddedServer.isRunning()).toBeTruthy();
     });
