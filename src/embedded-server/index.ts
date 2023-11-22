@@ -5,6 +5,12 @@ import { LoggerFactory } from '@day1co/pebbles';
 
 const logger = LoggerFactory.getLogger('redstone-config:embedded-server');
 
+export { EmbeddedServer } from './embedded-server';
+
+/**
+ *
+ * @deprecated in favor of EmbeddedServer
+ */
 export function startMockServer(filePath: string): void {
   const fixtureConfig = readConfigFile(filePath);
 
@@ -50,6 +56,10 @@ export function startMockServer(filePath: string): void {
   });
 }
 
+/**
+ *
+ * @deprecated in favor of EmbeddedServer
+ */
 export function readConfigFile(filePath: string): string {
   const validFilePath = `${process.cwd()}/${filePath}`;
   const extensionType = filePath.split('.').at(-1);
