@@ -70,8 +70,10 @@ describe('configClient', () => {
             res.end(fooMockData);
           } else if (req.url.startsWith('/bar')) {
             res.end(barMockData);
-          } else if (req.url.startsWith('/invalid')) {
-            res.end(JSON.stringify({ error: { errno : 0, code : 'err' } }));
+          } else if (req.url.startsWith('/protocol-error')) {
+            res.end(JSON.stringify({ error : { errno : 0, code : 'err' } }));
+          } else if (req.url.startsWith('/404')) {
+            res.end(JSON.stringify({ data : { error : 'Not Found' } }));
           };
         }).listen(testPort);
         server.on('clientError', (err, socket) => {
@@ -113,11 +115,12 @@ describe('configClient', () => {
       jest.spyOn(process, 'exit').mockReturnThis();
 
       getConfigSync({ endpoint: '', application: '' });
-      getConfigSync({ endpoint: `http://localhost:${testPort}`, application: 'invalid' });
+      getConfigSync({ endpoint: `http://localhost:${testPort}`, application: 'protocol-error' });
+      getConfigSync({ endpoint: `http://localhost:${testPort}`, application: '404' });
       getConfigSync({ endpoint: `http://localhost:88888`, application: 'foo' });
       getConfigSync({ endpoint: `localhost:${testPort}`, application: 'foo' });
 
-      expect(process.exit).toBeCalledTimes(4);
+      expect(process.exit).toBeCalledTimes(5);
     });
     test('assurance of a sole instance', () => {
       const barConfig = getConfigSync({ endpoint: `http://localhost:${testPort}`, application: 'bar' });
@@ -172,8 +175,10 @@ describe('configClient', () => {
               res.end(JSON.stringify(fooDevelopmentRawResponse));
             } else if (req.url.startsWith('/bar')) {
               res.end(JSON.stringify(barDevelopmentRawResponse));
-            } else if (req.url.startsWith('/invalid')) {
+            } else if (req.url.startsWith('/protocol-error')) {
               res.end(JSON.stringify({ error: { errno: 0, code: 'err' } }));
+            } else if (req.url.startsWith('/404')) {
+              res.end(JSON.stringify({ data: { error: 'Not Found' } }));
             }
           }
         })
@@ -200,11 +205,12 @@ describe('configClient', () => {
       jest.spyOn(process, 'exit').mockReturnThis();
 
       await getConfig({ endpoint: '', application: '' });
-      await getConfig({ endpoint: `http://localhost:${testPort}`, application: 'invalid' });
+      await getConfig({ endpoint: `http://localhost:${testPort}`, application: 'protocol-error' });
+      await getConfig({ endpoint: `http://localhost:${testPort}`, application: '404' });
       await getConfig({ endpoint: `http://localhost:88888`, application: 'foo' });
       await getConfig({ endpoint: `localhost:${testPort}`, application: 'foo' });
 
-      expect(process.exit).toBeCalledTimes(4);
+      expect(process.exit).toBeCalledTimes(5);
     });
     test('assurance of a sole instance', async () => {
       const barConfig = await getConfig({ endpoint: `http://localhost:${testPort}`, application: 'bar' });
