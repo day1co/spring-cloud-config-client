@@ -5,7 +5,7 @@ export interface ClientRequestOptions {
   label?: string;
 }
 
-export interface CloudConfigResponse {
+export interface CloudConfigSuccessResponse {
   name: string;
   profiles: string[];
   label?: string;
@@ -13,6 +13,15 @@ export interface CloudConfigResponse {
   state?: string;
   propertySources: PropertySource[];
 }
+
+export interface CloudConfigErrorResponse {
+  timestamp: string;
+  status: number;
+  error: string;
+  path: string;
+}
+
+export type CloudConfigResponse = CloudConfigSuccessResponse | CloudConfigErrorResponse;
 
 export interface ConfigObject {
   [x: string]: any;

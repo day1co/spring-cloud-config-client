@@ -9,7 +9,9 @@ import {
 } from './config-client.const';
 import type {
   ClientRequestOptions,
+  CloudConfigErrorResponse,
   CloudConfigResponse,
+  CloudConfigSuccessResponse,
   ConfigObject,
   PropertySource,
 } from './config-client.interface';
@@ -98,13 +100,20 @@ export class Config {
       : this.configObject[configKey];
   }
 
+  private isGettingError(originalData: CloudConfigResponse): originalData is CloudConfigErrorResponse {
+    return originalData.hasOwnProperty('error');
+  }
+
   private createConfigObject(originalData: CloudConfigResponse) {
+    if (this.isGettingError(originalData)) {
+      throw new Error(`${originalData.error}. Check if your config is valid : ${originalData.path}`);
+    }
     return originalData.name.indexOf(',') >= 0
       ? this.createMultipleApplicationConfigObject(originalData)
       : this.createSingleApplicationConfigObject(originalData);
   }
 
-  private createMultipleApplicationConfigObject(originalData: CloudConfigResponse): ConfigObject {
+  private createMultipleApplicationConfigObject(originalData: CloudConfigSuccessResponse): ConfigObject {
     const DEFAULT_APPLICATION_NAME = 'application';
 
     const isDefaultApplicationIncluded = originalData.propertySources.some((propertySource) => {
@@ -138,7 +147,7 @@ export class Config {
     }, {});
   }
 
-  private createSingleApplicationConfigObject(originalData: CloudConfigResponse): ConfigObject {
+  private createSingleApplicationConfigObject(originalData: CloudConfigSuccessResponse): ConfigObject {
     const configObject = this.mergeConfigProfiles(originalData.propertySources);
     return this.divideFlattenedKeysOfConfig(configObject);
   }
