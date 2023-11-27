@@ -2,40 +2,31 @@ import fs from 'fs';
 import { Worker } from 'worker_threads';
 import { LoggerFactory } from '@day1co/pebbles';
 
-export class EmbeddedServer {
-  private readonly logger = LoggerFactory.getLogger('spring-cloud-config-client:embedded-server');
-  private readonly config: string;
-  private static instance: EmbeddedServer | null;
-  private worker: Worker | null;
+const logger = LoggerFactory.getLogger('spring-cloud-config-client:embedded-server');
 
-  private constructor(mockConfig: string | object) {
-    this.config = this.setMockConfig(mockConfig);
-    this.worker = null;
+export class EmbeddedServer {
+  private static worker: Worker | null;
+
+  /**
+   *
+   * @description Returns true if worker thread is running on port 8888
+   */
+  public static isRunning(): boolean {
+    return this.worker?.threadId ? this.worker.threadId > 0 : false;
   }
 
   /**
    *
-   * @param mockConfig {string | object} - If string, it should be a valid file path based on your project root directory. If object, it should be a valid JSON object.
+   * @param mockConfig {string | object} - If string, it should be a file path based on your project root directory. If object, it should be a valid JSON object.
    */
-  public static create(mockConfig: string | object): EmbeddedServer {
-    if (!this.instance) {
-      this.instance = new EmbeddedServer(mockConfig);
+  public static async start(mockConfig: string | object) {
+    if (this.isRunning()) {
+      logger.warn('EmbeddedServer is already running');
+      return;
     }
-    return this.instance;
-  }
 
-  public static async destroy() {
-    if (this.instance) {
-      await this.instance.stop();
-      this.instance = null;
-    }
-  }
+    const config = this.readConfigFromFile(mockConfig);
 
-  public isRunning(): boolean {
-    return this.worker?.threadId ? this.worker.threadId > 0 : false;
-  }
-
-  public start(): void {
     this.worker = new Worker(
       `
       const http = require('http');
@@ -57,39 +48,41 @@ export class EmbeddedServer {
         log(config);
       });
       `,
-      { eval: true, workerData: { config: this.config } }
+      { eval: true, workerData: { config: config } }
     );
 
     this.worker.on('error', (err) => {
-      this.logger.error(`Error occurred on Worker config server : ${err.message}, stack = ${err.stack} `);
+      logger.error(`Error occurred on Worker config server : ${err.message}, stack = ${err.stack} `);
     });
   }
 
-  public async stop() {
+  public static async stop() {
     if (this.worker) {
-      await this.worker?.terminate();
-      this.logger.debug('Port 8888 is killed');
+      await this.worker.terminate();
       this.worker = null;
+      logger.info('EmbeddedServer stopped');
     } else {
-      this.logger.debug('Port 8888 is not running');
+      logger.warn('EmbeddedServer is not running');
     }
   }
 
-  private setMockConfig(mockConfig: string | object) {
-    let mockPropertySource = '';
+  private static readConfigFromFile(mockConfig: string | object) {
+    let mockPropertySource: { [key: string]: any };
     if (typeof mockConfig === 'object') {
-      mockPropertySource = JSON.stringify(mockConfig);
+      mockPropertySource = mockConfig;
     } else {
-      const validFilePath = `${process.cwd()}/${mockConfig}`;
-      const extensionType = mockConfig.split('.').at(-1);
-
-      if (extensionType === 'json') {
-        mockPropertySource = fs.readFileSync(validFilePath, 'utf-8');
-      } else if (extensionType === 'js' || extensionType === 'ts') {
-        const moduleObject = require(validFilePath);
-        mockPropertySource = JSON.stringify(moduleObject);
-      } else {
-        throw new Error(`Invalid mockConfig file : ${mockConfig}. Try using .js/.ts/.json extension`);
+      try {
+        const validFilePath = `${process.cwd()}/${mockConfig}`;
+        const extensionType = mockConfig.split('.').at(-1);
+        if (extensionType === 'json') {
+          mockPropertySource = JSON.parse(fs.readFileSync(validFilePath, 'utf-8'));
+        } else if (extensionType === 'js' || extensionType === 'ts') {
+          mockPropertySource = require(validFilePath);
+        } else {
+          throw new Error(`UNSUPPORTED_EXTENSION: ${extensionType}. Try using .js/.ts/.json extension`);
+        }
+      } catch (err) {
+        throw new Error(`INVALID_FILE: ${mockConfig}.`, { cause: err });
       }
     }
 
@@ -101,7 +94,7 @@ export class EmbeddedServer {
       propertySources: [
         {
           name: 'foo',
-          source: JSON.parse(mockPropertySource),
+          source: mockPropertySource,
         },
       ],
     });
