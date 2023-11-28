@@ -17,6 +17,7 @@ export class EmbeddedServer {
 
   /**
    *
+   * Starts a worker thread to mock Spring Cloud Config on port 8888. ***PLEASE DO NOT USE THIS IN PRODUCTION.***
    * @param mockConfig {string | object} - If string, it should be a file path based on your project root directory. If object, it should be a valid JSON object.
    */
   public static async start(mockConfig: string | object) {
