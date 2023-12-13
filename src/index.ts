@@ -1,6 +1,6 @@
 export { getConfigSync, getConfig, Config } from './config-client/config-client';
 export { createObjectByFlattenedKey, getValueFromNestedObject } from './utils';
-export { startMockServer } from './embedded-server';
+export { startMockServer, EmbeddedServer } from './embedded-server';
 export {
   DEF_CONFIG_ENDPOINT,
   DEF_CONFIG_APPLICATION,
